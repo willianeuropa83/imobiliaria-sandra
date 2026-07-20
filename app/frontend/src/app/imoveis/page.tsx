@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import PropertyCard from '@/components/PropertyCard';
 import FilterPanel from '@/components/FilterPanel';
 import SortSelectClient from './SortSelectClient';
-import { IMOVEIS_MOCK } from '@/lib/mock-data';
+import { getImoveis } from '@/lib/data-loader';
 import type { Imovel } from '@/types/imovel';
 
 export const metadata: Metadata = {
@@ -226,8 +226,11 @@ export default async function ImoveisPage(props: {
 }) {
   const searchParams = await props.searchParams;
 
+  // Carregar dados reais do JSON
+  const todosImoveis = await getImoveis();
+
   // Filtrar e ordenar
-  const filtrados = filtrarImoveis(IMOVEIS_MOCK, searchParams);
+  const filtrados = filtrarImoveis(todosImoveis, searchParams);
   const ordenarPor =
     typeof searchParams.ordenar_por === 'string' ? searchParams.ordenar_por : 'data_desc';
   const ordenados = ordenarImoveis(filtrados, ordenarPor);

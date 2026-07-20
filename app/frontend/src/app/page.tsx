@@ -1,87 +1,6 @@
 import SearchBar from "@/components/SearchBar";
 import PropertyCard from "@/components/PropertyCard";
-
-/* ---------- Dados placeholder para destaque ---------- */
-const IMOVEIS_DESTAQUE = [
-  {
-    id: "1",
-    titulo: "Apartamento T2 renovado no centro de Lisboa",
-    preco: 285000,
-    tipologia: "T2",
-    area: 85,
-    distrito: "Lisboa",
-    concelho: "Lisboa",
-    foto_principal: "",
-    portal: "idealista",
-    finalidade: "venda" as const,
-    aceita_corretores: "SIM" as const,
-  },
-  {
-    id: "2",
-    titulo: "Moradia T4 com jardim e piscina em Cascais",
-    preco: 675000,
-    tipologia: "T4",
-    area: 220,
-    distrito: "Lisboa",
-    concelho: "Cascais",
-    foto_principal: "",
-    portal: "imovirtual",
-    finalidade: "venda" as const,
-    aceita_corretores: "SIM" as const,
-  },
-  {
-    id: "3",
-    titulo: "Apartamento T1 junto ao metro em Matosinhos",
-    preco: 650,
-    tipologia: "T1",
-    area: 55,
-    distrito: "Porto",
-    concelho: "Matosinhos",
-    foto_principal: "",
-    portal: "olx",
-    finalidade: "arrendamento" as const,
-    aceita_corretores: "NAO" as const,
-  },
-  {
-    id: "4",
-    titulo: "Terreno urbano com 500m² em Braga",
-    preco: 95000,
-    tipologia: "T0",
-    area: 500,
-    distrito: "Braga",
-    concelho: "Braga",
-    foto_principal: "",
-    portal: "supercasa",
-    finalidade: "venda" as const,
-    aceita_corretores: "SIM" as const,
-  },
-  {
-    id: "5",
-    titulo: "Apartamento T3 com varanda panorâmica no Porto",
-    preco: 420000,
-    tipologia: "T3",
-    area: 130,
-    distrito: "Porto",
-    concelho: "Porto",
-    foto_principal: "",
-    portal: "era",
-    finalidade: "venda" as const,
-    aceita_corretores: "SIM*" as const,
-  },
-  {
-    id: "6",
-    titulo: "Moradia T3 rústica recuperada no Algarve",
-    preco: 350000,
-    tipologia: "T3",
-    area: 150,
-    distrito: "Faro",
-    concelho: "Loulé",
-    foto_principal: "",
-    portal: "remax",
-    finalidade: "venda" as const,
-    aceita_corretores: "SIM" as const,
-  },
-];
+import { getImoveis } from "@/lib/data-loader";
 
 /* ---------- Componente auxiliar: passo "Como funciona" ---------- */
 function StepCard({
@@ -114,7 +33,15 @@ function StepCard({
 /* ================================================================
    HOMEPAGE
    ================================================================ */
-export default function Home() {
+export default async function Home() {
+  // Carregar os 6 imóveis mais recentes com fotos para destaque
+  const todosImoveis = await getImoveis();
+  const destaques = todosImoveis
+    .filter((i) => i.ativo && i.foto_principal)
+    .sort((a, b) => new Date(b.data_atualizacao).getTime() - new Date(a.data_atualizacao).getTime())
+    .slice(0, 6);
+  const totalAtivos = todosImoveis.filter((i) => i.ativo).length;
+
   return (
     <>
       {/* ───────── Hero ───────── */}
@@ -152,8 +79,8 @@ export default function Home() {
       <section className="-mt-6 relative z-10 mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {[
-            { value: "12 500", label: "Imóveis disponíveis" },
-            { value: "8", label: "Portais agregados" },
+            { value: totalAtivos.toLocaleString("pt-PT"), label: "Imóveis disponíveis" },
+            { value: "9", label: "Portais agregados" },
             { value: "Diariamente", label: "Actualizado" },
           ].map((stat) => (
             <div
@@ -181,8 +108,21 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {IMOVEIS_DESTAQUE.map((imovel) => (
-            <PropertyCard key={imovel.id} {...imovel} />
+          {destaques.map((imovel) => (
+            <PropertyCard
+              key={imovel.id}
+              id={imovel.id}
+              titulo={imovel.titulo}
+              preco={imovel.preco}
+              tipologia={imovel.tipologia}
+              area={imovel.area_util}
+              distrito={imovel.distrito}
+              concelho={imovel.concelho}
+              foto_principal={imovel.foto_principal}
+              portal={imovel.portal}
+              finalidade={imovel.finalidade}
+              aceita_corretores={imovel.aceita_corretores}
+            />
           ))}
         </div>
 

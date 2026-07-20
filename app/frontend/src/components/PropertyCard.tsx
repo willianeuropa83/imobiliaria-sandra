@@ -10,8 +10,8 @@ interface PropertyCardProps {
   concelho: string;
   foto_principal?: string;
   portal: string;
-  finalidade: "venda" | "arrendamento";
-  aceita_corretores: "SIM" | "NAO" | "SIM*";
+  finalidade: string;
+  aceita_corretores: string;
 }
 
 function formatPreco(preco: number, finalidade: string): string {

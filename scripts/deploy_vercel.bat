@@ -1,7 +1,7 @@
 @echo off
 REM ═══════════════════════════════════════════════
 REM  Deploy Vercel — Imobiliária Sandra
-REM  Exporta dados + push para GitHub = auto-deploy
+REM  Exporta dados + deploy direto via Vercel CLI
 REM  Agendar no Task Scheduler: diariamente às 07:15
 REM  (15 min depois do scraping das 07:00)
 REM ═══════════════════════════════════════════════
@@ -22,17 +22,14 @@ if errorlevel 1 (
     exit /b 1
 )
 
-REM 2. Git add + commit + push
-echo [%date% %time%] Fazendo push para GitHub...
-cd /d "%PROJECT_DIR%"
-git add app/frontend/public/data/imoveis_data.json
-git commit -m "dados: atualizacao diaria %date%" 2>nul
-git push origin main 2>nul
-
+REM 2. Deploy direto via Vercel CLI
+echo [%date% %time%] Deploy para Vercel...
+cd /d "%FRONTEND_DIR%"
+vercel --prod --yes
 if errorlevel 1 (
-    echo [AVISO] Push falhou ou nada para commitar
-) else (
-    echo [OK] Push concluido - Vercel vai fazer deploy automatico
+    echo [ERRO] Deploy falhou
+    exit /b 1
 )
 
+echo [OK] Deploy concluido com sucesso
 echo [%date% %time%] Fim do deploy.

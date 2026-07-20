@@ -13,9 +13,9 @@ export interface Imovel {
   quartos?: number;
   casas_banho?: number;
   andar?: string;
-  estado: 'novo' | 'usado' | 'em-construcao' | 'renovado' | 'para-recuperar';
-  tipo: 'apartamento' | 'moradia' | 'terreno' | 'loja' | 'escritorio' | 'armazem' | 'garagem' | 'outro';
-  finalidade: 'venda' | 'arrendamento';
+  estado: string;
+  tipo: string;
+  finalidade: string;
 
   // Localização
   distrito: string;

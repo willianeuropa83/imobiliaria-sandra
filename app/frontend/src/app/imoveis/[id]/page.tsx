@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { IMOVEIS_MOCK } from '@/lib/mock-data';
+import { getImovelById } from '@/lib/data-loader';
 import type { Imovel } from '@/types/imovel';
 import PhotoGallery from './PhotoGallery';
 import ContactForm from './ContactForm';
@@ -11,13 +11,13 @@ export async function generateMetadata(props: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await props.params;
-  const imovel = IMOVEIS_MOCK.find((i) => i.id === id);
+  const imovel = await getImovelById(id);
   if (!imovel) {
     return { title: 'Imovel nao encontrado | Imobiliaria Sandra' };
   }
   return {
     title: `${imovel.titulo} | Imobiliaria Sandra`,
-    description: imovel.descricao.slice(0, 160),
+    description: (imovel.descricao || '').slice(0, 160),
   };
 }
 
@@ -146,7 +146,7 @@ export default async function ImovelDetalhePage(props: {
   params: Promise<{ id: string }>;
 }) {
   const { id } = await props.params;
-  const imovel = IMOVEIS_MOCK.find((i) => i.id === id);
+  const imovel = await getImovelById(id);
 
   if (!imovel) {
     notFound();
