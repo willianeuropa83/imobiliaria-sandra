@@ -50,6 +50,7 @@ interface RawImovel {
   preco_anterior?: number;
   data_alteracao_preco?: string;
   historico_precos?: { preco: number; data: string }[];
+  finalidade?: string;
 }
 
 let cachedImoveis: Imovel[] | null = null;
@@ -147,14 +148,16 @@ function derivarTipo(titulo: string): string {
 }
 
 /**
- * Deriva a finalidade (venda/arrendamento) a partir do título e preço
+ * Finalidade (venda/arrendamento).
+ *
+ * Passou a vir calculada do `export_fast.py`. Antes era adivinhada aqui com a
+ * regra "preço < 3000 € => arrendamento", que rotulava 666 imóveis como
+ * arrendamento só por serem baratos — incluindo anúncios cujo próprio título
+ * dizia "Terreno para venda". Como o scraper rejeita arrendamentos à entrada,
+ * o default correto é "venda".
  */
-function derivarFinalidade(titulo: string, preco: number): string {
-  const t = titulo.toLowerCase();
-  if (t.includes('arrend') || t.includes('alug') || t.includes('renda')) return 'arrendamento';
-  // Preço muito baixo para venda → provavelmente arrendamento
-  if (preco > 0 && preco < 3000) return 'arrendamento';
-  return 'venda';
+function derivarFinalidade(finalidade?: string): string {
+  return finalidade === 'arrendamento' ? 'arrendamento' : 'venda';
 }
 
 /**
@@ -176,7 +179,7 @@ function mapToImovel(raw: RawImovel): Imovel {
     casas_banho: raw.casas_banho || undefined,
     estado: raw.estado || 'usado',
     tipo: derivarTipo(titulo),
-    finalidade: derivarFinalidade(titulo, preco),
+    finalidade: derivarFinalidade(raw.finalidade),
     distrito: normalizarDistrito(raw.distrito || ''),
     concelho: normalizarConcelho(raw.concelho || ''),
     morada: raw.morada || undefined,

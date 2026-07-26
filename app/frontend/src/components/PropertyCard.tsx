@@ -13,6 +13,29 @@ interface PropertyCardProps {
   portal: string;
   finalidade: string;
   aceita_corretores: string;
+  data_publicacao?: string;
+}
+
+/** Preço por m² — a métrica que uma corretora usa para comparar zonas. */
+function precoPorM2(preco: number, area?: number): string | null {
+  if (!preco || !area || area <= 0) return null;
+  const valor = Math.round(preco / area);
+  if (!isFinite(valor) || valor <= 0) return null;
+  return `${new Intl.NumberFormat('pt-PT').format(valor)} €/m²`;
+}
+
+/** Há quanto tempo o imóvel está no mercado. */
+function diasNoMercado(desde?: string): string | null {
+  if (!desde) return null;
+  const inicio = new Date(desde).getTime();
+  if (!isFinite(inicio)) return null;
+  const dias = Math.floor((Date.now() - inicio) / 86_400_000);
+  if (dias < 0) return null;
+  if (dias === 0) return 'Hoje';
+  if (dias === 1) return 'Há 1 dia';
+  if (dias < 30) return `Há ${dias} dias`;
+  const meses = Math.floor(dias / 30);
+  return meses === 1 ? 'Há 1 mês' : `Há ${meses} meses`;
 }
 
 /** Etiqueta de descida ou subida de preço face ao valor anterior. */
@@ -87,7 +110,10 @@ export default function PropertyCard({
   portal,
   finalidade,
   aceita_corretores,
+  data_publicacao,
 }: PropertyCardProps) {
+  const eurM2 = precoPorM2(preco, area);
+  const noMercado = diasNoMercado(data_publicacao);
   return (
     <Link
       href={`/imoveis/${id}`}
@@ -135,6 +161,15 @@ export default function PropertyCard({
             {finalidade === "venda" ? "Venda" : "Arrendamento"}
           </span>
         </div>
+
+        {/* Ha quanto tempo esta no mercado */}
+        {noMercado && (
+          <div className="absolute top-3 left-3">
+            <span className="rounded-full bg-black/55 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm">
+              {noMercado}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Detalhes */}
@@ -150,6 +185,11 @@ export default function PropertyCard({
             {tipologia}
           </span>
           {variacaoPreco(preco, preco_anterior)}
+          {eurM2 && (
+            <span className="rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+              {eurM2}
+            </span>
+          )}
           {area && (
             <span className="flex items-center gap-1 text-xs text-gray-500">
               <svg

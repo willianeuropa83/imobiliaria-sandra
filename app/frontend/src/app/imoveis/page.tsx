@@ -352,6 +352,7 @@ export default async function ImoveisPage(props: {
                     portal={imovel.portal}
                     finalidade={imovel.finalidade}
                     aceita_corretores={imovel.aceita_corretores}
+                    data_publicacao={imovel.data_publicacao}
                   />
                 ))}
               </div>
