@@ -9,6 +9,7 @@ interface FilterPanelProps {
   portais: string[];
   tipologias: string[];
   tiposVendedor: string[];
+  tipos: string[];
 }
 
 // Etiquetas viradas para quem procura, não para quem anuncia
@@ -30,19 +31,18 @@ const TIPO_LABELS: Record<string, string> = {
   apartamento: 'Apartamento',
   moradia: 'Moradia',
   terreno: 'Terreno',
+  quinta: 'Quinta / Herdade',
   loja: 'Loja',
   escritorio: 'Escritório',
   armazem: 'Armazém',
   garagem: 'Garagem',
+  predio: 'Prédio',
+  quarto: 'Quarto',
+  ruina: 'Ruína',
   outro: 'Outro',
 };
 
-const TIPOS_IMOVEL = [
-  'apartamento', 'moradia', 'terreno', 'loja',
-  'escritorio', 'armazem', 'garagem', 'outro',
-];
-
-export default function FilterPanel({ distritos, concelhos, portais, tipologias, tiposVendedor }: FilterPanelProps) {
+export default function FilterPanel({ distritos, concelhos, portais, tipologias, tiposVendedor, tipos }: FilterPanelProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -246,7 +246,7 @@ export default function FilterPanel({ distritos, concelhos, portais, tipologias,
           Tipo de imóvel
         </span>
         <div className="space-y-1.5">
-          {TIPOS_IMOVEL.map((tipo) => (
+          {tipos.map((tipo) => (
             <label
               key={tipo}
               className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer hover:text-[var(--primary)] transition"

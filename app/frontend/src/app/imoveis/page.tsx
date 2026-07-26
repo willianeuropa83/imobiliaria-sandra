@@ -316,6 +316,7 @@ export default async function ImoveisPage(props: {
               portais={filterOptions.portais}
               tipologias={filterOptions.tipologias}
               tiposVendedor={filterOptions.tiposVendedor}
+              tipos={filterOptions.tipos}
             />
           </Suspense>
 

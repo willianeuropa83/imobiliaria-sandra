@@ -51,6 +51,7 @@ interface RawImovel {
   data_alteracao_preco?: string;
   historico_precos?: { preco: number; data: string }[];
   finalidade?: string;
+  tipo?: string;
 }
 
 let cachedImoveis: Imovel[] | null = null;
@@ -133,18 +134,16 @@ function normalizarAceitaCorretores(valor?: string): 'SIM' | 'NAO' | 'SIM*' {
 }
 
 /**
- * Deriva o tipo de imóvel a partir do título e tipologia
+ * Tipo de imóvel.
+ *
+ * Passou a vir calculado do `export_fast.py`, que separa o campo `tipologia`
+ * da BD (que misturava T0..T6+ com Terreno/Moradia/Garagem/...) em dois campos.
+ * A versão antiga adivinhava pelo título e, quando não reconhecia nada,
+ * assumia 'apartamento' — inventando um tipo para 6.468 imóveis. Agora, quando
+ * não há certeza, o tipo fica vazio.
  */
-function derivarTipo(titulo: string): string {
-  const t = titulo.toLowerCase();
-  if (t.includes('moradia') || t.includes('vivenda') || t.includes('villa')) return 'moradia';
-  if (t.includes('terreno') || t.includes('lote') || t.includes('parcela')) return 'terreno';
-  if (t.includes('loja') || t.includes('comércio') || t.includes('comercio')) return 'loja';
-  if (t.includes('escritório') || t.includes('escritorio') || t.includes('gabinete')) return 'escritorio';
-  if (t.includes('armazém') || t.includes('armazem') || t.includes('pavilhão')) return 'armazem';
-  if (t.includes('garagem') || t.includes('estacionamento') || t.includes('parking')) return 'garagem';
-  if (t.includes('quinta') || t.includes('herdade')) return 'moradia';
-  return 'apartamento'; // default
+function derivarTipo(tipo?: string): string {
+  return (tipo || '').trim();
 }
 
 /**
@@ -178,7 +177,7 @@ function mapToImovel(raw: RawImovel): Imovel {
     quartos: raw.quartos || undefined,
     casas_banho: raw.casas_banho || undefined,
     estado: raw.estado || 'usado',
-    tipo: derivarTipo(titulo),
+    tipo: derivarTipo(raw.tipo),
     finalidade: derivarFinalidade(raw.finalidade),
     distrito: normalizarDistrito(raw.distrito || ''),
     concelho: normalizarConcelho(raw.concelho || ''),
@@ -251,6 +250,7 @@ export interface FilterOptions {
   portais: string[];
   tipologias: string[];
   tiposVendedor: string[]; // Imobiliária | Particular | Banca
+  tipos: string[]; // apartamento | moradia | terreno | ...
 }
 
 export async function getFilterOptions(): Promise<FilterOptions> {
@@ -262,6 +262,7 @@ export async function getFilterOptions(): Promise<FilterOptions> {
   const portaisSet = new Set<string>();
   const tipologiasSet = new Set<string>();
   const vendedoresSet = new Set<string>();
+  const tiposSet = new Set<string>();
 
   for (const im of ativos) {
     if (im.distrito) {
@@ -274,6 +275,7 @@ export async function getFilterOptions(): Promise<FilterOptions> {
     if (im.portal) portaisSet.add(im.portal);
     if (im.tipologia) tipologiasSet.add(im.tipologia);
     if (im.tipo_vendedor) vendedoresSet.add(im.tipo_vendedor);
+    if (im.tipo) tiposSet.add(im.tipo);
   }
 
   const distritos = [...distritosSet].sort((a, b) => a.localeCompare(b, 'pt'));
@@ -320,7 +322,9 @@ export async function getFilterOptions(): Promise<FilterOptions> {
     return a.localeCompare(b, 'pt');
   });
 
-  return { distritos, concelhos, portais, tipologias, tiposVendedor };
+  const tipos = [...tiposSet].sort((a, b) => a.localeCompare(b, 'pt'));
+
+  return { distritos, concelhos, portais, tipologias, tiposVendedor, tipos };
 }
 
 // Manter compatibilidade com API routes existentes
