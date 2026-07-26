@@ -45,6 +45,9 @@ export interface Imovel {
   url_original: string; // link para o anúncio no portal
   referencia_portal?: string; // ID do anúncio no portal
 
+  // Quem anuncia — 'Imobiliária' | 'Particular' | 'Banca'
+  tipo_vendedor?: string;
+
   // Restrições (regra I01)
   aceita_corretores: 'SIM' | 'NAO' | 'SIM*';
   restricao_texto?: string; // texto da restrição encontrada
@@ -70,6 +73,7 @@ export interface FiltrosPesquisa {
   quartos_min?: number;
   estado?: string[];
   portal?: string[];
+  tipo_vendedor?: string[];
   aceita_corretores?: boolean;
   ordenar_por?: 'preco_asc' | 'preco_desc' | 'data_desc' | 'area_desc';
   pagina?: number;

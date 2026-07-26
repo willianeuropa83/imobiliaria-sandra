@@ -6,11 +6,8 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const navLinks = [
-    { label: "Início", href: "/" },
     { label: "Imóveis", href: "/imoveis" },
     { label: "Mapa", href: "/mapa" },
-    { label: "Sobre", href: "/sobre" },
-    { label: "Contacto", href: "/contacto" },
   ];
 
   return (
@@ -18,7 +15,7 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <a href="/" className="flex items-center gap-2">
+          <a href="/imoveis" className="flex items-center gap-2">
             <svg
               className="h-8 w-8 text-[#1e40af]"
               fill="none"

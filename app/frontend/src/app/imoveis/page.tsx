@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import PropertyCard from '@/components/PropertyCard';
 import FilterPanel from '@/components/FilterPanel';
 import SortSelectClient from './SortSelectClient';
-import { getImoveis } from '@/lib/data-loader';
+import { getImoveis, getFilterOptions } from '@/lib/data-loader';
 import type { Imovel } from '@/types/imovel';
 
 export const metadata: Metadata = {
@@ -46,7 +46,15 @@ function filtrarImoveis(
       ? params.tipologia.split(',').filter(Boolean)
       : [];
   if (tipologias.length > 0) {
-    resultado = resultado.filter((i) => tipologias.includes(i.tipologia));
+    resultado = resultado.filter((i) => {
+      if (tipologias.includes(i.tipologia)) return true;
+      // "T6+" agrupa todas as tipologias com número >= 7 (T7, T8, T9, T10, T31, T39, etc.)
+      if (tipologias.includes('T6+')) {
+        const m = i.tipologia.match(/^T(\d+)/);
+        if (m && parseInt(m[1]) >= 7) return true;
+      }
+      return false;
+    });
   }
 
   // Tipo
@@ -60,6 +68,12 @@ function filtrarImoveis(
   const distrito = typeof params.distrito === 'string' ? params.distrito : '';
   if (distrito) {
     resultado = resultado.filter((i) => i.distrito === distrito);
+  }
+
+  // Concelho
+  const concelho = typeof params.concelho === 'string' ? params.concelho : '';
+  if (concelho) {
+    resultado = resultado.filter((i) => i.concelho === concelho);
   }
 
   // Finalidade
@@ -90,6 +104,15 @@ function filtrarImoveis(
     typeof params.portal === 'string' ? params.portal.split(',').filter(Boolean) : [];
   if (portais.length > 0) {
     resultado = resultado.filter((i) => portais.includes(i.portal));
+  }
+
+  // Quem anuncia (Imobiliária / Particular / Banca)
+  const vendedores =
+    typeof params.vendedor === 'string' ? params.vendedor.split(',').filter(Boolean) : [];
+  if (vendedores.length > 0) {
+    resultado = resultado.filter(
+      (i) => i.tipo_vendedor && vendedores.includes(i.tipo_vendedor),
+    );
   }
 
   // Aceita corretores
@@ -226,8 +249,11 @@ export default async function ImoveisPage(props: {
 }) {
   const searchParams = await props.searchParams;
 
-  // Carregar dados reais do JSON
-  const todosImoveis = await getImoveis();
+  // Carregar dados reais do JSON e opções de filtro
+  const [todosImoveis, filterOptions] = await Promise.all([
+    getImoveis(),
+    getFilterOptions(),
+  ]);
 
   // Filtrar e ordenar
   const filtrados = filtrarImoveis(todosImoveis, searchParams);
@@ -268,7 +294,13 @@ export default async function ImoveisPage(props: {
         <div className="flex gap-6">
           {/* Filtros (sidebar) */}
           <Suspense fallback={null}>
-            <FilterPanel />
+            <FilterPanel
+              distritos={filterOptions.distritos}
+              concelhos={filterOptions.concelhos}
+              portais={filterOptions.portais}
+              tipologias={filterOptions.tipologias}
+              tiposVendedor={filterOptions.tiposVendedor}
+            />
           </Suspense>
 
           {/* Resultados */}

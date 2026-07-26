@@ -86,12 +86,14 @@ export default function PropertyCard({
           </div>
         )}
 
-        {/* Badge de preço */}
-        <div className="absolute bottom-3 left-3">
-          <span className="preco-badge text-sm shadow-md">
-            {formatPreco(preco, finalidade)}
-          </span>
-        </div>
+        {/* Badge de preço — esconder quando preco é 0 */}
+        {preco > 0 && (
+          <div className="absolute bottom-3 left-3">
+            <span className="preco-badge text-sm shadow-md">
+              {formatPreco(preco, finalidade)}
+            </span>
+          </div>
+        )}
 
         {/* Finalidade */}
         <div className="absolute top-3 right-3">

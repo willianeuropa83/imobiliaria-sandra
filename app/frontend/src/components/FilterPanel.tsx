@@ -1,14 +1,28 @@
 'use client';
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { useState, useCallback, useTransition } from 'react';
-import { DISTRITOS_PT, TIPOLOGIAS, TIPOS_IMOVEL, PORTAIS } from '@/types/imovel';
+import { useState, useCallback, useTransition, useMemo } from 'react';
+
+interface FilterPanelProps {
+  distritos: string[];
+  concelhos: Record<string, string[]>;
+  portais: string[];
+  tipologias: string[];
+  tiposVendedor: string[];
+}
+
+// Etiquetas viradas para quem procura, não para quem anuncia
+const VENDEDOR_LABELS: Record<string, string> = {
+  'Imobiliária': 'Imobiliárias',
+  'Particular': 'Particulares',
+  'Banca': 'Banca',
+};
 
 const ESTADOS = [
   { value: 'novo', label: 'Novo' },
   { value: 'usado', label: 'Usado' },
   { value: 'renovado', label: 'Renovado' },
-  { value: 'em-construcao', label: 'Em construcao' },
+  { value: 'em-construcao', label: 'Em construção' },
   { value: 'para-recuperar', label: 'Para recuperar' },
 ];
 
@@ -17,13 +31,18 @@ const TIPO_LABELS: Record<string, string> = {
   moradia: 'Moradia',
   terreno: 'Terreno',
   loja: 'Loja',
-  escritorio: 'Escritorio',
-  armazem: 'Armazem',
+  escritorio: 'Escritório',
+  armazem: 'Armazém',
   garagem: 'Garagem',
   outro: 'Outro',
 };
 
-export default function FilterPanel() {
+const TIPOS_IMOVEL = [
+  'apartamento', 'moradia', 'terreno', 'loja',
+  'escritorio', 'armazem', 'garagem', 'outro',
+];
+
+export default function FilterPanel({ distritos, concelhos, portais, tipologias, tiposVendedor }: FilterPanelProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -35,12 +54,20 @@ export default function FilterPanel() {
   const currentTipos = searchParams.get('tipo')?.split(',').filter(Boolean) || [];
   const currentEstados = searchParams.get('estado')?.split(',').filter(Boolean) || [];
   const currentPortais = searchParams.get('portal')?.split(',').filter(Boolean) || [];
+  const currentVendedores = searchParams.get('vendedor')?.split(',').filter(Boolean) || [];
   const currentDistrito = searchParams.get('distrito') || '';
+  const currentConcelho = searchParams.get('concelho') || '';
   const currentPrecoMin = searchParams.get('preco_min') || '';
   const currentPrecoMax = searchParams.get('preco_max') || '';
   const currentFinalidade = searchParams.get('finalidade') || '';
   const currentAceitaCorretores = searchParams.get('aceita_corretores') === 'true';
   const currentQuery = searchParams.get('query') || '';
+
+  // Concelhos filtrados pelo distrito selecionado
+  const concelhosVisiveis = useMemo(() => {
+    if (!currentDistrito) return [];
+    return concelhos[currentDistrito] || [];
+  }, [currentDistrito, concelhos]);
 
   const updateParams = useCallback(
     (updates: Record<string, string>) => {
@@ -68,6 +95,21 @@ export default function FilterPanel() {
     updateParams({ [paramName]: newValues.join(',') });
   }
 
+  function handleDistritoChange(distrito: string) {
+    // Ao mudar distrito, limpar concelho
+    const params = new URLSearchParams(searchParams.toString());
+    if (distrito) {
+      params.set('distrito', distrito);
+    } else {
+      params.delete('distrito');
+    }
+    params.delete('concelho');
+    params.delete('pagina');
+    startTransition(() => {
+      router.push(`${pathname}?${params.toString()}`, { scroll: false });
+    });
+  }
+
   function handleClearFilters() {
     startTransition(() => {
       router.push(pathname, { scroll: false });
@@ -79,7 +121,9 @@ export default function FilterPanel() {
     currentTipos.length > 0 ||
     currentEstados.length > 0 ||
     currentPortais.length > 0 ||
+    currentVendedores.length > 0 ||
     currentDistrito !== '' ||
+    currentConcelho !== '' ||
     currentPrecoMin !== '' ||
     currentPrecoMax !== '' ||
     currentFinalidade !== '' ||
@@ -135,13 +179,45 @@ export default function FilterPanel() {
         </div>
       </div>
 
-      {/* Tipologia */}
+      {/* Quem anuncia — o filtro mais útil para prospecção */}
+      {tiposVendedor.length > 0 && (
+        <div>
+          <span className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">
+            Quem anuncia
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {tiposVendedor.map((v) => (
+              <label
+                key={v}
+                className={`flex-1 min-w-[calc(50%-0.25rem)] flex items-center justify-center rounded-lg border px-2 py-1.5 text-xs font-medium cursor-pointer transition ${
+                  currentVendedores.includes(v)
+                    ? 'filtro-activo'
+                    : 'border-gray-300 text-gray-600 hover:border-[var(--primary)]'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  className="sr-only"
+                  checked={currentVendedores.includes(v)}
+                  onChange={() => toggleArrayParam('vendedor', v, currentVendedores)}
+                />
+                {VENDEDOR_LABELS[v] || v}
+              </label>
+            ))}
+          </div>
+          <p className="text-[11px] text-gray-400 mt-1">
+            Particulares são imóveis anunciados pelo próprio dono
+          </p>
+        </div>
+      )}
+
+      {/* Tipologia — dinâmica dos dados */}
       <div>
         <span className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">
           Tipologia
         </span>
         <div className="grid grid-cols-3 gap-2">
-          {TIPOLOGIAS.map((t) => (
+          {tipologias.map((t) => (
             <label
               key={t}
               className={`flex items-center justify-center gap-1.5 rounded-lg border px-2 py-1.5 text-xs font-medium cursor-pointer transition ${
@@ -162,10 +238,10 @@ export default function FilterPanel() {
         </div>
       </div>
 
-      {/* Tipo de imovel */}
+      {/* Tipo de imóvel */}
       <div>
         <span className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">
-          Tipo de imovel
+          Tipo de imóvel
         </span>
         <div className="space-y-1.5">
           {TIPOS_IMOVEL.map((tipo) => (
@@ -185,7 +261,7 @@ export default function FilterPanel() {
         </div>
       </div>
 
-      {/* Distrito */}
+      {/* Distrito — dinâmico dos dados */}
       <div>
         <label htmlFor="distrito" className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">
           Distrito
@@ -193,11 +269,11 @@ export default function FilterPanel() {
         <select
           id="distrito"
           value={currentDistrito}
-          onChange={(e) => updateParams({ distrito: e.target.value })}
+          onChange={(e) => handleDistritoChange(e.target.value)}
           className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] outline-none transition bg-white"
         >
-          <option value="">Todos os distritos</option>
-          {DISTRITOS_PT.map((d) => (
+          <option value="">Todos os distritos ({distritos.length})</option>
+          {distritos.map((d) => (
             <option key={d} value={d}>
               {d}
             </option>
@@ -205,10 +281,32 @@ export default function FilterPanel() {
         </select>
       </div>
 
-      {/* Preco */}
+      {/* Concelho — aparece apenas quando distrito selecionado */}
+      {concelhosVisiveis.length > 0 && (
+        <div>
+          <label htmlFor="concelho" className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">
+            Concelho
+          </label>
+          <select
+            id="concelho"
+            value={currentConcelho}
+            onChange={(e) => updateParams({ concelho: e.target.value })}
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-[var(--primary)] focus:ring-1 focus:ring-[var(--primary)] outline-none transition bg-white"
+          >
+            <option value="">Todos os concelhos ({concelhosVisiveis.length})</option>
+            {concelhosVisiveis.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* Preço */}
       <div>
         <span className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">
-          Preco (EUR)
+          Preço (EUR)
         </span>
         <div className="flex items-center gap-2">
           <input
@@ -258,13 +356,13 @@ export default function FilterPanel() {
         </div>
       </div>
 
-      {/* Portal */}
+      {/* Portal — dinâmico dos dados */}
       <div>
         <span className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">
           Portal
         </span>
         <div className="space-y-1.5">
-          {PORTAIS.map((p) => (
+          {portais.map((p) => (
             <label
               key={p}
               className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer hover:text-[var(--primary)] transition capitalize"
@@ -308,7 +406,7 @@ export default function FilterPanel() {
           </button>
         </label>
         <p className="text-[11px] text-gray-400 mt-1">
-          Mostrar apenas imoveis que aceitam corretores
+          Mostrar apenas imóveis que aceitam corretores
         </p>
       </div>
 
@@ -338,7 +436,7 @@ export default function FilterPanel() {
 
   return (
     <>
-      {/* Botao mobile para abrir filtros */}
+      {/* Botão mobile para abrir filtros */}
       <button
         type="button"
         onClick={() => setMobileOpen(true)}
