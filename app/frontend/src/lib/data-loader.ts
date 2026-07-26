@@ -47,6 +47,9 @@ interface RawImovel {
   longitude?: number | null;
   certificado_energetico?: string;
   fotos?: string[];
+  preco_anterior?: number;
+  data_alteracao_preco?: string;
+  historico_precos?: { preco: number; data: string }[];
 }
 
 let cachedImoveis: Imovel[] | null = null;
@@ -194,6 +197,9 @@ function mapToImovel(raw: RawImovel): Imovel {
     referencia_portal: raw.portal_id || undefined,
     aceita_corretores: normalizarAceitaCorretores(raw.aceita_corretores),
     tipo_vendedor: raw.tipo_vendedor || undefined,
+    preco_anterior: raw.preco_anterior || undefined,
+    data_alteracao_preco: raw.data_alteracao_preco || undefined,
+    historico_precos: raw.historico_precos || undefined,
     restricao_texto: raw.restricao_texto || undefined,
     data_publicacao: raw.data_publicacao || undefined,
     data_scraping: raw.data_scraping || new Date().toISOString(),

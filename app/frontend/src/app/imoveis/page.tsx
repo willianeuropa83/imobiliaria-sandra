@@ -19,6 +19,7 @@ const ORDENACAO_LABELS: Record<string, string> = {
   preco_asc: 'Preco: menor primeiro',
   preco_desc: 'Preco: maior primeiro',
   area_desc: 'Area: maior primeiro',
+  descida_desc: 'Maior descida de preco',
 };
 
 function filtrarImoveis(
@@ -115,6 +116,13 @@ function filtrarImoveis(
     );
   }
 
+  // Só imóveis que baixaram de preço
+  if (params.baixa_preco === 'true') {
+    resultado = resultado.filter(
+      (i) => i.preco_anterior != null && i.preco > 0 && i.preco < i.preco_anterior,
+    );
+  }
+
   // Aceita corretores
   if (params.aceita_corretores === 'true') {
     resultado = resultado.filter((i) => i.aceita_corretores !== 'NAO');
@@ -132,6 +140,14 @@ function ordenarImoveis(imoveis: Imovel[], ordenar: string): Imovel[] {
       return copia.sort((a, b) => b.preco - a.preco);
     case 'area_desc':
       return copia.sort((a, b) => (b.area_util || 0) - (a.area_util || 0));
+    case 'descida_desc': {
+      // Maior descida percentual primeiro; quem não desceu fica no fim
+      const descida = (i: Imovel) =>
+        i.preco_anterior && i.preco > 0 && i.preco < i.preco_anterior
+          ? (i.preco_anterior - i.preco) / i.preco_anterior
+          : -1;
+      return copia.sort((a, b) => descida(b) - descida(a));
+    }
     case 'data_desc':
     default:
       return copia.sort(
@@ -327,6 +343,7 @@ export default async function ImoveisPage(props: {
                     id={imovel.id}
                     titulo={imovel.titulo}
                     preco={imovel.preco}
+                    preco_anterior={imovel.preco_anterior}
                     tipologia={imovel.tipologia}
                     area={imovel.area_util}
                     distrito={imovel.distrito}

@@ -8,6 +8,7 @@ const ORDENACAO_LABELS: Record<string, string> = {
   preco_asc: 'Preco: menor primeiro',
   preco_desc: 'Preco: maior primeiro',
   area_desc: 'Area: maior primeiro',
+  descida_desc: 'Maior descida de preco',
 };
 
 export default function SortSelectClient({ currentSort }: { currentSort: string }) {

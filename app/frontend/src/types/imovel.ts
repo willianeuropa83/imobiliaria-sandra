@@ -5,7 +5,9 @@ export interface Imovel {
   titulo: string;
   descricao: string;
   preco: number;
-  preco_anterior?: number; // para histórico de preços
+  preco_anterior?: number; // preço imediatamente antes do atual
+  data_alteracao_preco?: string; // quando o preço atual passou a vigorar
+  historico_precos?: { preco: number; data: string }[]; // só quando houve alteração
   tipologia: string; // T0, T1, T2, T3, T4, T5+
   area_util?: number; // m²
   area_bruta?: number; // m²

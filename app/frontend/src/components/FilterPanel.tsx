@@ -61,6 +61,7 @@ export default function FilterPanel({ distritos, concelhos, portais, tipologias,
   const currentPrecoMax = searchParams.get('preco_max') || '';
   const currentFinalidade = searchParams.get('finalidade') || '';
   const currentAceitaCorretores = searchParams.get('aceita_corretores') === 'true';
+  const currentBaixaPreco = searchParams.get('baixa_preco') === 'true';
   const currentQuery = searchParams.get('query') || '';
 
   // Concelhos filtrados pelo distrito selecionado
@@ -128,6 +129,7 @@ export default function FilterPanel({ distritos, concelhos, portais, tipologias,
     currentPrecoMax !== '' ||
     currentFinalidade !== '' ||
     currentAceitaCorretores ||
+    currentBaixaPreco ||
     currentQuery !== '';
 
   const filterContent = (
@@ -377,6 +379,35 @@ export default function FilterPanel({ distritos, concelhos, portais, tipologias,
             </label>
           ))}
         </div>
+      </div>
+
+      {/* Baixou de preço */}
+      <div>
+        <label className="flex items-center justify-between cursor-pointer">
+          <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+            Baixou de preço
+          </span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={currentBaixaPreco}
+            onClick={() =>
+              updateParams({ baixa_preco: currentBaixaPreco ? '' : 'true' })
+            }
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              currentBaixaPreco ? 'bg-[var(--primary)]' : 'bg-gray-300'
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow-sm ${
+                currentBaixaPreco ? 'translate-x-6' : 'translate-x-1'
+              }`}
+            />
+          </button>
+        </label>
+        <p className="text-[11px] text-gray-400 mt-1">
+          Só imóveis cujo preço desceu desde que entraram no mercado
+        </p>
       </div>
 
       {/* Aceita corretores */}

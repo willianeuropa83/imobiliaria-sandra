@@ -4,6 +4,7 @@ interface PropertyCardProps {
   id: string;
   titulo: string;
   preco: number;
+  preco_anterior?: number;
   tipologia: string;
   area?: number;
   distrito: string;
@@ -12,6 +13,38 @@ interface PropertyCardProps {
   portal: string;
   finalidade: string;
   aceita_corretores: string;
+}
+
+/** Etiqueta de descida ou subida de preço face ao valor anterior. */
+function variacaoPreco(preco: number, anterior?: number) {
+  if (!anterior || !preco || anterior === preco) return null;
+
+  const desceu = preco < anterior;
+  const pct = Math.round(Math.abs((preco - anterior) / anterior) * 100);
+  if (pct < 1) return null;
+
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${
+        desceu ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+      }`}
+      title={`Preço anterior: ${new Intl.NumberFormat('pt-PT', {
+        style: 'currency',
+        currency: 'EUR',
+        maximumFractionDigits: 0,
+      }).format(anterior)}`}
+    >
+      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d={desceu ? 'M19 14l-7 7m0 0l-7-7m7 7V3' : 'M5 10l7-7m0 0l7 7m-7-7v18'}
+        />
+      </svg>
+      {desceu ? '−' : '+'}
+      {pct}%
+    </span>
+  );
 }
 
 function formatPreco(preco: number, finalidade: string): string {
@@ -45,6 +78,7 @@ export default function PropertyCard({
   id,
   titulo,
   preco,
+  preco_anterior,
   tipologia,
   area,
   distrito,
@@ -110,11 +144,12 @@ export default function PropertyCard({
           {titulo}
         </h3>
 
-        {/* Tipologia e area */}
+        {/* Tipologia, area e variacao de preco */}
         <div className="flex flex-wrap items-center gap-2">
           <span className="rounded-md bg-blue-50 px-2 py-0.5 text-xs font-medium text-[var(--primary)]">
             {tipologia}
           </span>
+          {variacaoPreco(preco, preco_anterior)}
           {area && (
             <span className="flex items-center gap-1 text-xs text-gray-500">
               <svg

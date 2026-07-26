@@ -236,6 +236,46 @@ export default async function ImovelDetalhePage(props: {
                   </span>
                 )}
               </div>
+
+              {/* Histórico de preços */}
+              {imovel.historico_precos && imovel.historico_precos.length > 1 && (
+                <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                    Histórico de preços
+                  </h3>
+                  <ol className="space-y-2">
+                    {[...imovel.historico_precos].reverse().map((entrada, idx, lista) => {
+                      const anterior = lista[idx + 1];
+                      const delta = anterior ? entrada.preco - anterior.preco : 0;
+                      return (
+                        <li
+                          key={`${entrada.data}-${idx}`}
+                          className="flex items-center justify-between gap-3 text-sm"
+                        >
+                          <span className="text-gray-500 tabular-nums">
+                            {new Date(entrada.data).toLocaleDateString('pt-PT')}
+                          </span>
+                          <span className="flex items-center gap-2">
+                            <span className="font-medium text-gray-900">
+                              {formatarPreco(entrada.preco, imovel.finalidade)}
+                            </span>
+                            {delta !== 0 && (
+                              <span
+                                className={`text-xs font-semibold ${
+                                  delta < 0 ? 'text-emerald-600' : 'text-amber-600'
+                                }`}
+                              >
+                                {delta < 0 ? '−' : '+'}
+                                {formatarPreco(Math.abs(delta), 'venda')}
+                              </span>
+                            )}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                </div>
+              )}
             </div>
 
             {/* Info rapida */}
